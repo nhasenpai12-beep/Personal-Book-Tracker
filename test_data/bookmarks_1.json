@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "bookId": 1,
+    "note": "Bookmark at page 42"
+  },
+  {
+    "id": 2,
+    "bookId": 1,
+    "note": "Bookmark at page 78"
+  }
+]

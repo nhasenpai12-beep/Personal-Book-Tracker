@@ -1,0 +1,10 @@
+[
+  {
+    "bookId": 1,
+    "lastPage": 42
+  },
+  {
+    "bookId": 2,
+    "lastPage": 15
+  }
+]

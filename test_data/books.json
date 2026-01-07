@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "title": "Alice's Adventures in Wonderland",
+    "author": "Lewis Carroll",
+    "coverPath": "",
+    "contentPath": "/path/to/alice_wonderland.epub"
+  },
+  {
+    "id": 2,
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "coverPath": "",
+    "contentPath": "/path/to/pride_prejudice.epub"
+  }
+]
