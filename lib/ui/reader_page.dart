@@ -20,6 +20,7 @@ class _ReaderPageState extends State<ReaderPage> {
   bool _isLoading = true;
   int _currentParagraph = 0;
   String? _currentChapterTitle;
+  String? _currentPreviewText;
   final _readerLogic = ReaderLogic();
   EpubController? _epubController;
 
@@ -68,13 +69,35 @@ class _ReaderPageState extends State<ReaderPage> {
       setState(() {
         _currentParagraph = value.chapterNumber ?? 0;
         _currentChapterTitle = value.chapter?.Title;
+        
+        // Extract preview text from chapter content
+        try {
+          final chapterContent = value.chapter?.HtmlContent ?? '';
+          // Strip HTML tags and get first 100 characters
+          String previewText = chapterContent
+              .replaceAll(RegExp(r'<[^>]*>'), '')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+          
+          if (previewText.length > 100) {
+            previewText = '${previewText.substring(0, 100)}...';
+          }
+          _currentPreviewText = previewText.isNotEmpty ? previewText : null;
+        } catch (e) {
+          _currentPreviewText = null;
+        }
       });
       _readerLogic.saveProgress(widget.book.id, value.chapterNumber ?? 0);
     }
   }
 
   Future<void> _addBookmark() async {
-    await _readerLogic.addBookmark(widget.book.id, _currentParagraph, _currentChapterTitle);
+    await _readerLogic.addBookmark(
+      widget.book.id, 
+      _currentParagraph, 
+      _currentChapterTitle,
+      _currentPreviewText,
+    );
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

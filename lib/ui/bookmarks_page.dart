@@ -89,15 +89,33 @@ class _BookmarksPageState extends State<BookmarksPage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        subtitle: bookmark.chapterTitle != null
-                            ? Text(
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (bookmark.chapterTitle != null)
+                              Text(
                                 bookmark.chapterTitle!,
                                 style: const TextStyle(
-                                  color: Colors.white54,
+                                  color: Color(0xFF8B5CF6),
                                   fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              )
-                            : null,
+                              ),
+                            if (bookmark.previewText != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                bookmark.previewText!,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 11,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

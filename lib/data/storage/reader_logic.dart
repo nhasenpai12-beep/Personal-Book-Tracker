@@ -39,8 +39,8 @@ class ReaderLogic {
     await _progressController.saveProgress(progress);
   }
 
-  Future<void> addBookmark(int bookId, int currentChapter, String? chapterTitle) async {
-    await _bookmarksController.addBookmark(bookId, currentChapter, chapterTitle);
+  Future<void> addBookmark(int bookId, int currentChapter, String? chapterTitle, String? previewText) async {
+    await _bookmarksController.addBookmark(bookId, currentChapter, chapterTitle, previewText);
   }
   
   void dispose() {

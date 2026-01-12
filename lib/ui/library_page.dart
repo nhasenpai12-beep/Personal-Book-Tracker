@@ -5,6 +5,7 @@ import 'package:project_proposal/model/book.dart';
 import 'package:project_proposal/model/user_settings.dart';
 import 'package:project_proposal/ui/reader_page.dart';
 import 'package:project_proposal/ui/collection_page.dart';
+import 'package:project_proposal/main.dart';
 import 'dart:io';
 
 class LibraryPage extends StatefulWidget {
@@ -106,9 +107,14 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> onToggleTheme() async {
-    _settings.darkMode = !_settings.darkMode;
-    await _storage.saveUserSettings(_settings);
-    setState(() {});
+    // Call the global theme toggle
+    final appState = MyApp.of(context);
+    if (appState != null) {
+      await appState.toggleTheme();
+      // Update local settings
+      _settings.darkMode = !_settings.darkMode;
+      await _storage.saveUserSettings(_settings);
+    }
   }
 
   Future<void> onDeleteBook(int bookId) async {

@@ -9,7 +9,7 @@ void main() async {
   final localStorage = LocalStorageController();
   await localStorage.initialize();
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget {
@@ -17,6 +17,11 @@ class MyApp extends StatefulWidget {
 
   @override
   State<MyApp> createState() => _MyAppState();
+  
+  // Global key to access state from anywhere
+  static _MyAppState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_MyAppState>();
+  }
 }
 
 class _MyAppState extends State<MyApp> {
@@ -35,6 +40,19 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _darkMode = settings?.darkMode ?? true;
       });
+    }
+  }
+
+  // Method to toggle theme from anywhere in the app
+  Future<void> toggleTheme() async {
+    setState(() {
+      _darkMode = !_darkMode;
+    });
+    // Save to storage
+    final settings = await _storage.getUserSettings();
+    if (settings != null) {
+      settings.darkMode = _darkMode;
+      await _storage.saveUserSettings(settings);
     }
   }
 

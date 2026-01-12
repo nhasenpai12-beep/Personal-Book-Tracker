@@ -4,6 +4,7 @@ class Bookmark {
   String note;
   int chapterIndex;
   String? chapterTitle;
+  String? previewText;
 
   Bookmark({
     required this.id,
@@ -11,6 +12,7 @@ class Bookmark {
     required this.note,
     required this.chapterIndex,
     this.chapterTitle,
+    this.previewText,
   });
 
   Map<String, dynamic> toJson() => {
@@ -19,6 +21,7 @@ class Bookmark {
         'note': note,
         'chapterIndex': chapterIndex,
         'chapterTitle': chapterTitle,
+        'previewText': previewText,
       };
 
   factory Bookmark.fromJson(Map<String, dynamic> json) => Bookmark(
@@ -27,6 +30,7 @@ class Bookmark {
         note: json['note'] as String,
         chapterIndex: json['chapterIndex'] as int? ?? 0,
         chapterTitle: json['chapterTitle'] as String?,
+        previewText: json['previewText'] as String?,
       );
 
   Bookmark copyWith({
@@ -35,6 +39,7 @@ class Bookmark {
     String? note,
     int? chapterIndex,
     String? chapterTitle,
+    String? previewText,
   }) {
     return Bookmark(
       id: id ?? this.id,
@@ -42,6 +47,7 @@ class Bookmark {
       note: note ?? this.note,
       chapterIndex: chapterIndex ?? this.chapterIndex,
       chapterTitle: chapterTitle ?? this.chapterTitle,
+      previewText: previewText ?? this.previewText,
     );
   }
 }
