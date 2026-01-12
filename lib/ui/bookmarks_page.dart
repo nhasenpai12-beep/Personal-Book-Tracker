@@ -39,11 +39,18 @@ class _BookmarksPageState extends State<BookmarksPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.grey[100]!;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white54 : Colors.black54;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        foregroundColor: Colors.white,
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
         title: Text('Bookmarks - ${widget.book.title}'),
       ),
       body: _isLoading
@@ -56,13 +63,13 @@ class _BookmarksPageState extends State<BookmarksPage> {
                       Icon(
                         Icons.bookmark_border,
                         size: 64,
-                        color: Colors.white38,
+                        color: subtextColor.withOpacity(0.5),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'No bookmarks yet',
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: textColor.withOpacity(0.7),
                           fontSize: 16,
                         ),
                       ),
@@ -75,7 +82,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
                   itemBuilder: (context, index) {
                     final bookmark = _bookmarks[index];
                     return Card(
-                      color: const Color(0xFF1E1E1E),
+                      color: cardColor,
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: const Icon(
@@ -84,8 +91,8 @@ class _BookmarksPageState extends State<BookmarksPage> {
                         ),
                         title: Text(
                           bookmark.note,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: textColor,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -105,8 +112,8 @@ class _BookmarksPageState extends State<BookmarksPage> {
                               const SizedBox(height: 4),
                               Text(
                                 bookmark.previewText!,
-                                style: const TextStyle(
-                                  color: Colors.white54,
+                                style: TextStyle(
+                                  color: subtextColor,
                                   fontSize: 11,
                                   fontStyle: FontStyle.italic,
                                 ),

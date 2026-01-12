@@ -46,7 +46,7 @@ class _ReaderPageState extends State<ReaderPage> {
       });
       
       // Navigate to initial chapter if specified
-      if (widget.initialChapterIndex != null && widget.initialChapterIndex! > 0) {
+      if (widget.initialChapterIndex != null) {
         // Give the controller time to initialize
         await Future.delayed(const Duration(milliseconds: 500));
         controller.jumpTo(index: widget.initialChapterIndex!);
@@ -112,12 +112,17 @@ class _ReaderPageState extends State<ReaderPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        foregroundColor: Colors.white,
-        title: Text(widget.book.title, style: const TextStyle(fontSize: 18)),
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
+        title: Text(widget.book.title, style: TextStyle(fontSize: 18, color: textColor)),
         actions: [
           IconButton(
             icon: const Icon(Icons.bookmark_add),
@@ -153,9 +158,9 @@ class _ReaderPageState extends State<ReaderPage> {
                         children: [
                           const Icon(Icons.error_outline, size: 60, color: Colors.red),
                           const SizedBox(height: 20),
-                          const Text(
+                          Text(
                             'Failed to load book',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
+                            style: TextStyle(color: textColor, fontSize: 18),
                           ),
                           const SizedBox(height: 20),
                           ElevatedButton(
@@ -169,10 +174,11 @@ class _ReaderPageState extends State<ReaderPage> {
                       controller: _epubController!,
                       onChapterChanged: _onChapterChanged,
                       builders: EpubViewBuilders<DefaultBuilderOptions>(
-                        options: const DefaultBuilderOptions(
+                        options: DefaultBuilderOptions(
                           textStyle: TextStyle(
                             height: 1.5,
                             fontSize: 18,
+                            color: textColor,
                           ),
                         ),
                         chapterDividerBuilder: (_) => const Divider(
@@ -182,7 +188,9 @@ class _ReaderPageState extends State<ReaderPage> {
                     ),
       drawer: _epubController != null
           ? Drawer(
-              backgroundColor: const Color(0xFF1E1E1E),
+              backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                  ? const Color(0xFF1E1E1E) 
+                  : Colors.white,
               child: EpubViewTableOfContents(
                 controller: _epubController!,
               ),
@@ -192,28 +200,33 @@ class _ReaderPageState extends State<ReaderPage> {
   }
 
   Widget _buildUnsupportedPlatformMessage() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.phone_android, size: 100, color: Colors.white38),
+            Icon(Icons.phone_android, size: 100, color: subtextColor.withOpacity(0.5)),
             const SizedBox(height: 30),
-            const Text(
+            Text(
               'EPUB Reader Not Supported',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'The EPUB reader is only available on Android and iOS devices.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              style: TextStyle(color: subtextColor, fontSize: 16),
             ),
             const SizedBox(height: 30),
             ElevatedButton.icon(
