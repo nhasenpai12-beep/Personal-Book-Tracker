@@ -18,11 +18,13 @@ class ReaderPage extends StatefulWidget {
 class _ReaderPageState extends State<ReaderPage> {
   bool _isReaderSupported = false;
   bool _isLoading = true;
+  int _currentChapter = 0;
   int _currentParagraph = 0;
   String? _currentChapterTitle;
   String? _currentPreviewText;
   final _readerLogic = ReaderLogic();
   EpubController? _epubController;
+  bool _hasNavigatedToInitialChapter = false;
 
   @override
   void initState() {
@@ -46,10 +48,20 @@ class _ReaderPageState extends State<ReaderPage> {
       });
       
       // Navigate to initial chapter if specified
-      if (widget.initialChapterIndex != null) {
-        // Give the controller time to initialize
-        await Future.delayed(const Duration(milliseconds: 500));
-        controller.jumpTo(index: widget.initialChapterIndex!);
+      if (widget.initialChapterIndex != null && !_hasNavigatedToInitialChapter) {
+        _hasNavigatedToInitialChapter = true;
+        // Give the controller more time to fully initialize the document
+        await Future.delayed(const Duration(milliseconds: 800));
+        
+        // Use the controller's jumpTo method with the chapter index
+        if (mounted && _epubController != null) {
+          try {
+            _epubController!.jumpTo(index: widget.initialChapterIndex!);
+            print('Jumped to chapter index: ${widget.initialChapterIndex}');
+          } catch (e) {
+            print('Error jumping to chapter: $e');
+          }
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -66,8 +78,12 @@ class _ReaderPageState extends State<ReaderPage> {
 
   void _onChapterChanged(dynamic value) {
     if (value != null) {
+      final chapterNumber = value.chapterNumber ?? 0;
+      final paragraphNumber = value.paragraphNumber ?? 0;
+      
       setState(() {
-        _currentParagraph = value.chapterNumber ?? 0;
+        _currentChapter = chapterNumber;
+        _currentParagraph = paragraphNumber;
         _currentChapterTitle = value.chapter?.Title;
         
         // Extract preview text from chapter content
@@ -87,13 +103,18 @@ class _ReaderPageState extends State<ReaderPage> {
           _currentPreviewText = null;
         }
       });
-      _readerLogic.saveProgress(widget.book.id, value.chapterNumber ?? 0);
+      
+      // Save progress with chapter number
+      _readerLogic.saveProgress(widget.book.id, chapterNumber);
+      
+      print('Chapter changed - Chapter: $chapterNumber, Paragraph: $paragraphNumber');
     }
   }
 
   Future<void> _addBookmark() async {
     await _readerLogic.addBookmark(
       widget.book.id, 
+      _currentChapter,
       _currentParagraph, 
       _currentChapterTitle,
       _currentPreviewText,

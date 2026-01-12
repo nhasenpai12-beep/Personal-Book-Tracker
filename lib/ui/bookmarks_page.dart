@@ -99,15 +99,14 @@ class _BookmarksPageState extends State<BookmarksPage> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (bookmark.chapterTitle != null)
-                              Text(
-                                bookmark.chapterTitle!,
-                                style: const TextStyle(
-                                  color: Color(0xFF8B5CF6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            Text(
+                              'Chapter ${bookmark.chapterIndex + 1}${bookmark.chapterTitle != null ? ': ${bookmark.chapterTitle}' : ''}',
+                              style: const TextStyle(
+                                color: Color(0xFF8B5CF6),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
+                            ),
                             if (bookmark.previewText != null) ...[
                               const SizedBox(height: 4),
                               Text(
@@ -121,6 +120,14 @@ class _BookmarksPageState extends State<BookmarksPage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatDate(bookmark.createdAt),
+                              style: TextStyle(
+                                color: subtextColor.withOpacity(0.7),
+                                fontSize: 10,
+                              ),
+                            ),
                           ],
                         ),
                         trailing: Row(
@@ -128,8 +135,27 @@ class _BookmarksPageState extends State<BookmarksPage> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.play_arrow, color: Color(0xFF8B5CF6)),
-                              onPressed: () {
-                                // Navigate back to reader at this chapter
+                              onPressed: () async {
+                                // Show loading indicator
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) => const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF8B5CF6),
+                                    ),
+                                  ),
+                                );
+                                
+                                // Small delay to ensure smooth transition
+                                await Future.delayed(const Duration(milliseconds: 100));
+                                
+                                if (!mounted) return;
+                                
+                                // Close loading dialog
+                                Navigator.pop(context);
+                                
+                                // Navigate to reader with the bookmark's chapter
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
@@ -153,5 +179,26 @@ class _BookmarksPageState extends State<BookmarksPage> {
                   },
                 ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Just now';
+        }
+        return '${difference.inMinutes}m ago';
+      }
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 }
