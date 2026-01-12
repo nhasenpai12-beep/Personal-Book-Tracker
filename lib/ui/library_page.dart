@@ -124,25 +124,32 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.grey[100]!;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white54 : Colors.black54;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        title: const Text(
+        backgroundColor: backgroundColor,
+        title: Text(
           'My Library',
-          style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             icon: Icon(
               _settings.darkMode ? Icons.light_mode : Icons.dark_mode,
-              color: Colors.white,
+              color: textColor,
             ),
             onPressed: onToggleTheme,
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.sort, color: Colors.white),
-            color: const Color(0xFF1E1E1E),
+            icon: Icon(Icons.sort, color: textColor),
+            color: cardColor,
             onSelected: _onSortChanged,
             itemBuilder: (context) => [
               PopupMenuItem(
@@ -151,13 +158,13 @@ class _LibraryPageState extends State<LibraryPage> {
                   children: [
                     Icon(
                       _sortBy == 'title' ? Icons.check : Icons.sort_by_alpha,
-                      color: _sortBy == 'title' ? const Color(0xFF8B5CF6) : Colors.white70,
+                      color: _sortBy == 'title' ? const Color(0xFF8B5CF6) : subtextColor,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Sort by Title',
                       style: TextStyle(
-                        color: _sortBy == 'title' ? const Color(0xFF8B5CF6) : Colors.white,
+                        color: _sortBy == 'title' ? const Color(0xFF8B5CF6) : textColor,
                       ),
                     ),
                   ],
@@ -169,13 +176,13 @@ class _LibraryPageState extends State<LibraryPage> {
                   children: [
                     Icon(
                       _sortBy == 'author' ? Icons.check : Icons.person,
-                      color: _sortBy == 'author' ? const Color(0xFF8B5CF6) : Colors.white70,
+                      color: _sortBy == 'author' ? const Color(0xFF8B5CF6) : subtextColor,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Sort by Author',
                       style: TextStyle(
-                        color: _sortBy == 'author' ? const Color(0xFF8B5CF6) : Colors.white,
+                        color: _sortBy == 'author' ? const Color(0xFF8B5CF6) : textColor,
                       ),
                     ),
                   ],
@@ -187,13 +194,13 @@ class _LibraryPageState extends State<LibraryPage> {
                   children: [
                     Icon(
                       _sortBy == 'recent' ? Icons.check : Icons.access_time,
-                      color: _sortBy == 'recent' ? const Color(0xFF8B5CF6) : Colors.white70,
+                      color: _sortBy == 'recent' ? const Color(0xFF8B5CF6) : subtextColor,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Recently Added',
                       style: TextStyle(
-                        color: _sortBy == 'recent' ? const Color(0xFF8B5CF6) : Colors.white,
+                        color: _sortBy == 'recent' ? const Color(0xFF8B5CF6) : textColor,
                       ),
                     ),
                   ],
@@ -202,7 +209,7 @@ class _LibraryPageState extends State<LibraryPage> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.collections_bookmark, color: Colors.white),
+            icon: Icon(Icons.collections_bookmark, color: textColor),
             onPressed: () {
               Navigator.push(
                 context,
@@ -220,14 +227,14 @@ class _LibraryPageState extends State<LibraryPage> {
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 hintText: 'Search books by title or author...',
-                hintStyle: const TextStyle(color: Colors.white54),
+                hintStyle: TextStyle(color: subtextColor),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF8B5CF6)),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.white54),
+                        icon: Icon(Icons.clear, color: subtextColor),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('');
@@ -235,7 +242,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       )
                     : null,
                 filled: true,
-                fillColor: const Color(0xFF1E1E1E),
+                fillColor: cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -248,7 +255,7 @@ class _LibraryPageState extends State<LibraryPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
                 : _filteredBooks.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(textColor, subtextColor)
                     : GridView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -313,8 +320,8 @@ class _LibraryPageState extends State<LibraryPage> {
                                       children: [
                                         Text(
                                           book.title,
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: textColor,
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -324,8 +331,8 @@ class _LibraryPageState extends State<LibraryPage> {
                                         const SizedBox(height: 4),
                                         Text(
                                           book.author,
-                                          style: const TextStyle(
-                                            color: Colors.white54,
+                                          style: TextStyle(
+                                            color: subtextColor,
                                             fontSize: 12,
                                           ),
                                           maxLines: 1,
@@ -393,22 +400,22 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color textColor, Color subtextColor) {
     if (_searchQuery.isNotEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.search_off, size: 80, color: Colors.white38),
+            Icon(Icons.search_off, size: 80, color: subtextColor.withOpacity(0.5)),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'No books found',
-              style: TextStyle(color: Colors.white70, fontSize: 18),
+              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 18),
             ),
             const SizedBox(height: 10),
             Text(
               'Try a different search term',
-              style: TextStyle(color: Colors.white54, fontSize: 14),
+              style: TextStyle(color: subtextColor, fontSize: 14),
             ),
           ],
         ),
@@ -419,16 +426,16 @@ class _LibraryPageState extends State<LibraryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.library_books, size: 80, color: Colors.white38),
+          Icon(Icons.library_books, size: 80, color: subtextColor.withOpacity(0.5)),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'Your library is empty',
-            style: TextStyle(color: Colors.white70, fontSize: 18),
+            style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 18),
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Tap + to add a book',
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+            style: TextStyle(color: subtextColor, fontSize: 14),
           ),
         ],
       ),
@@ -442,9 +449,14 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   void _showBookOptions(BuildContext context, Book book) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.grey[100]!;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: cardColor,
       builder: (context) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -452,7 +464,7 @@ class _LibraryPageState extends State<LibraryPage> {
           children: [
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Delete Book', style: TextStyle(color: Colors.white)),
+              title: Text('Delete Book', style: TextStyle(color: textColor)),
               onTap: () {
                 Navigator.pop(context);
                 onDeleteBook(book.id);
