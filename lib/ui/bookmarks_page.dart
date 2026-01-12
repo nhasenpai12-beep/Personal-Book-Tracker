@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:project_proposal/data/storage/bookmarks_controller.dart';
 import 'package:project_proposal/model/bookmark.dart';
 import 'package:project_proposal/model/book.dart';
+import 'package:project_proposal/ui/reader_page.dart';
 
 class BookmarksPage extends StatefulWidget {
   final Book book;
@@ -83,11 +84,44 @@ class _BookmarksPageState extends State<BookmarksPage> {
                         ),
                         title: Text(
                           bookmark.note,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteBookmark(bookmark.id),
+                        subtitle: bookmark.chapterTitle != null
+                            ? Text(
+                                bookmark.chapterTitle!,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                              )
+                            : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.play_arrow, color: Color(0xFF8B5CF6)),
+                              onPressed: () {
+                                // Navigate back to reader at this chapter
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ReaderPage(
+                                      book: widget.book,
+                                      initialChapterIndex: bookmark.chapterIndex,
+                                    ),
+                                  ),
+                                );
+                              },
+                              tooltip: 'Go to bookmark',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteBookmark(bookmark.id),
+                            ),
+                          ],
                         ),
                       ),
                     );

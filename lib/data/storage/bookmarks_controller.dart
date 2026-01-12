@@ -4,14 +4,18 @@ import 'package:path_provider/path_provider.dart';
 import 'package:project_proposal/model/bookmark.dart';
 
 class BookmarksController {
-  Future<void> addBookmark(int bookId, int page) async {
+  Future<void> addBookmark(int bookId, int chapterIndex, String? chapterTitle) async {
     final bookmarks = await loadBookmarks(bookId);
     final newId = bookmarks.isEmpty ? 1 : bookmarks.map((b) => b.id).reduce((a, b) => a > b ? a : b) + 1;
+    
+    final chapterLabel = chapterTitle ?? 'Chapter ${chapterIndex + 1}';
     
     bookmarks.add(Bookmark(
       id: newId,
       bookId: bookId,
-      note: 'Bookmark at page $page',
+      note: 'Bookmark at $chapterLabel',
+      chapterIndex: chapterIndex,
+      chapterTitle: chapterTitle,
     ));
     
     await _saveBookmarks(bookId, bookmarks);

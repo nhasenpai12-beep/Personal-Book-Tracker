@@ -39,11 +39,12 @@ dependencies:
   path_provider: ^2.1.1
   path: ^1.8.3
   
-  # EPUB Reader
-  vocsy_epub_viewer: ^3.0.0
+  # EPUB Reader - Using epub_view for modern Flutter compatibility
+  epub_view: ^3.2.0
+  epubx: ^4.0.0
   
   # File Picker
-  file_picker: ^6.1.1
+  file_picker: ^8.1.4
   
   # UUID Generator
   uuid: ^4.5.1

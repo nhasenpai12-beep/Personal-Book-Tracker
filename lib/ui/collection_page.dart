@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_proposal/data/storage/local_storage_controller.dart';
 import 'package:project_proposal/model/collection.dart';
+import 'package:project_proposal/ui/collection_detail_page.dart';
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
@@ -144,6 +145,18 @@ class _CollectionPageState extends State<CollectionPage> {
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _deleteCollection(collection.id),
                         ),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CollectionDetailPage(
+                                collection: collection,
+                              ),
+                            ),
+                          );
+                          // Reload collections after returning
+                          await _loadCollections();
+                        },
                       ),
                     );
                   },

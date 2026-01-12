@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:vocsy_epub_viewer/epub_viewer.dart';
-import 'package:project_proposal/data/storage/reading_progress_controller.dart';
-import 'package:project_proposal/data/storage/bookmarks_controller.dart';
+import 'package:epub_view/epub_view.dart';
+import 'package:project_proposal/data/storage/reader_logic.dart';
 import 'package:project_proposal/model/book.dart';
-import 'package:project_proposal/model/reading_progress.dart';
 import 'package:project_proposal/ui/bookmarks_page.dart';
 import 'dart:io' show Platform;
 
 class ReaderPage extends StatefulWidget {
   final Book book;
+  final int? initialChapterIndex;
 
-  const ReaderPage({super.key, required this.book});
+  const ReaderPage({super.key, required this.book, this.initialChapterIndex});
 
   @override
   State<ReaderPage> createState() => _ReaderPageState();
@@ -18,16 +17,18 @@ class ReaderPage extends StatefulWidget {
 
 class _ReaderPageState extends State<ReaderPage> {
   bool _isReaderSupported = false;
-  int _currentPage = 0;
-  final _progressController = ReadingProgressController();
-  final _bookmarksController = BookmarksController();
+  bool _isLoading = true;
+  int _currentParagraph = 0;
+  String? _currentChapterTitle;
+  final _readerLogic = ReaderLogic();
+  EpubController? _epubController;
 
   @override
   void initState() {
     super.initState();
     _checkPlatformSupport();
     if (_isReaderSupported) {
-      onStartReading();
+      _loadBook();
     }
   }
 
@@ -35,38 +36,26 @@ class _ReaderPageState extends State<ReaderPage> {
     _isReaderSupported = Platform.isAndroid || Platform.isIOS;
   }
 
-  Future<void> onStartReading() async {
-    final progress = await _progressController.loadProgress(widget.book.id);
-    
+  Future<void> _loadBook() async {
     try {
-      VocsyEpub.setConfig(
-        themeColor: const Color(0xFF8B5CF6),
-        identifier: "androidBook",
-        scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
-        allowSharing: true,
-        enableTts: true,
-        nightMode: true,
-      );
-
-      VocsyEpub.open(
-        widget.book.contentPath,
-        lastLocation: progress != null 
-            ? EpubLocator.fromJson({
-                'bookId': widget.book.id,
-                'created': DateTime.now().millisecondsSinceEpoch,
-                'locations': {},
-              })
-            : null,
-      );
-
-      VocsyEpub.locatorStream.listen((locator) {
-        onPageChanged(locator);
+      final controller = await _readerLogic.loadBook(widget.book);
+      setState(() {
+        _epubController = controller;
+        _isLoading = false;
       });
+      
+      // Navigate to initial chapter if specified
+      if (widget.initialChapterIndex != null && widget.initialChapterIndex! > 0) {
+        // Give the controller time to initialize
+        await Future.delayed(const Duration(milliseconds: 500));
+        controller.jumpTo(index: widget.initialChapterIndex!);
+      }
     } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error opening book: $e'),
+            content: Text('Error loading book: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -74,37 +63,28 @@ class _ReaderPageState extends State<ReaderPage> {
     }
   }
 
-  void onPageChanged(EpubLocator locator) {
-    setState(() {
-      _currentPage = DateTime.now().millisecondsSinceEpoch % 10000;
-    });
-    
-    final progress = ReadingProgress(
-      bookId: widget.book.id,
-      lastPage: _currentPage,
-    );
-    
-    _progressController.saveProgress(progress);
+  void _onChapterChanged(dynamic value) {
+    if (value != null) {
+      setState(() {
+        _currentParagraph = value.chapterNumber ?? 0;
+        _currentChapterTitle = value.chapter?.Title;
+      });
+      _readerLogic.saveProgress(widget.book.id, value.chapterNumber ?? 0);
+    }
   }
 
-  Future<void> addBookmark() async {
-    await _bookmarksController.addBookmark(widget.book.id, _currentPage);
+  Future<void> _addBookmark() async {
+    await _readerLogic.addBookmark(widget.book.id, _currentParagraph, _currentChapterTitle);
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Bookmark added'),
           backgroundColor: Color(0xFF8B5CF6),
+          duration: Duration(seconds: 2),
         ),
       );
     }
-  }
-
-  void searchInBook(String query) {
-    // TODO: Implement search functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Searching for: $query')),
-    );
   }
 
   @override
@@ -118,7 +98,8 @@ class _ReaderPageState extends State<ReaderPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.bookmark_add),
-            onPressed: addBookmark,
+            onPressed: _addBookmark,
+            tooltip: 'Add Bookmark',
           ),
           IconButton(
             icon: const Icon(Icons.bookmarks),
@@ -130,52 +111,60 @@ class _ReaderPageState extends State<ReaderPage> {
                 ),
               );
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearchDialog(),
+            tooltip: 'View Bookmarks',
           ),
         ],
       ),
       body: !_isReaderSupported
           ? _buildUnsupportedPlatformMessage()
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.book_outlined,
-                    size: 80,
+          : _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
                     color: Color(0xFF8B5CF6),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Reading: ${widget.book.title}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                )
+              : _epubController == null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Failed to load book',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Back to Library'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : EpubView(
+                      controller: _epubController!,
+                      onChapterChanged: _onChapterChanged,
+                      builders: EpubViewBuilders<DefaultBuilderOptions>(
+                        options: const DefaultBuilderOptions(
+                          textStyle: TextStyle(
+                            height: 1.5,
+                            fontSize: 18,
+                          ),
+                        ),
+                        chapterDividerBuilder: (_) => const Divider(
+                          height: 30,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'by ${widget.book.author}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Text(
-                    'Current Page: $_currentPage',
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+      drawer: _epubController != null
+          ? Drawer(
+              backgroundColor: const Color(0xFF1E1E1E),
+              child: EpubViewTableOfContents(
+                controller: _epubController!,
               ),
-            ),
+            )
+          : null,
     );
   }
 
@@ -220,41 +209,9 @@ class _ReaderPageState extends State<ReaderPage> {
     );
   }
 
-  void _showSearchDialog() {
-    final controller = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('Search in Book', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Enter search term',
-            hintStyle: TextStyle(color: Colors.white54),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              searchInBook(controller.text);
-            },
-            child: const Text('Search'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   void dispose() {
+    _readerLogic.dispose();
     super.dispose();
   }
 }

@@ -5,7 +5,7 @@ import 'package:project_proposal/model/book.dart';
 import 'package:project_proposal/model/user_settings.dart';
 import 'package:project_proposal/ui/reader_page.dart';
 import 'package:project_proposal/ui/collection_page.dart';
-import 'package:project_proposal/ui/widgets/book_card.dart';
+import 'dart:io';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -86,13 +86,16 @@ class _LibraryPageState extends State<LibraryPage> {
     if (path != null) {
       final localPath = await _fileImporter.copyToLocalStorage(path);
       if (localPath != null && mounted) {
+        // Extract metadata from EPUB
+        final metadata = await _fileImporter.extractMetadata(localPath);
+        
         final newId = _books.isEmpty ? 1 : _books.map((b) => b.id).reduce((a, b) => a > b ? a : b) + 1;
         
         final book = Book(
           id: newId,
-          title: 'Imported Book',
-          author: 'Unknown',
-          coverPath: '',
+          title: metadata['title'],
+          author: metadata['author'],
+          coverPath: metadata['coverPath'],
           contentPath: localPath,
         );
         
@@ -251,8 +254,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         itemCount: _filteredBooks.length,
                         itemBuilder: (context, index) {
                           final book = _filteredBooks[index];
-                          return BookCard(
-                            book: book,
+                          return GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -262,6 +264,73 @@ class _LibraryPageState extends State<LibraryPage> {
                               );
                             },
                             onLongPress: () => _showBookOptions(context, book),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1E1E1E),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: book.coverPath.isNotEmpty && File(book.coverPath).existsSync()
+                                            ? Image.file(
+                                                File(book.coverPath),
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return _buildDefaultCover(book.title);
+                                                },
+                                              )
+                                            : _buildDefaultCover(book.title),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          book.title,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          book.author,
+                                          style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -272,6 +341,48 @@ class _LibraryPageState extends State<LibraryPage> {
         onPressed: onImportFile,
         backgroundColor: const Color(0xFF8B5CF6),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildDefaultCover(String title) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF8B5CF6).withOpacity(0.3),
+            const Color(0xFF1E1E1E),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.book,
+              size: 48,
+              color: Color(0xFF8B5CF6),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
